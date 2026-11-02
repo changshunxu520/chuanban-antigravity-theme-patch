@@ -173,12 +173,24 @@ test('protobuf reader rejects truncated, overflowing and invalid wire encodings'
     Buffer.from([0x80]), Buffer.from([0]), Buffer.from([0x0b]),
     Buffer.from([0x09, 1]), Buffer.from([0x0d, 1]),
     Buffer.from([0x0a, 4, 1]), Buffer.concat([field(1, 1), Buffer.from([0x80])]),
-    Buffer.concat([Buffer.from([8]), varint(BigInt(Number.MAX_SAFE_INTEGER) + 1n)]),
+    Buffer.concat([Buffer.from([10]), varint(BigInt(Number.MAX_SAFE_INTEGER) + 1n)]),
     Buffer.from([8, ...Array(11).fill(0xff)])
   ];
   for (const bytes of invalid) assert.throws(() => api.parseProto(bytes));
   assert.throws(() => api.parseProto(123));
   assert.equal(api.parseProto(field(1, 983040)).get(1), 983040);
+});
+
+test('valid large unknown protobuf scalars do not suppress otherwise readable metrics', testContext => {
+  const api = fixture(testContext);
+  const maximumUint64=(1n<<64n)-1n;
+  assert.equal(api.parseProto(field(50,maximumUint64)).get(50),maximumUint64);
+  const original=api.parseProto(generation({limit:983040})).get(1);
+  const enriched=field(1,Buffer.concat([original,field(50,maximumUint64)]));
+  api.createDatabase(FIRST_ID,[enriched]);
+  assert.equal(api.readConversationMetrics(FIRST_ID).maxContextTokens,983040);
+  api.createDatabase(SECOND_ID,[field(1,field(4,field(2,maximumUint64)))]);
+  assert.equal(api.readConversationMetrics(SECOND_ID),null,'unsafe token counts remain rejected');
 });
 
 test('bytes in numeric usage fields cannot be rendered as HTML', testContext => {

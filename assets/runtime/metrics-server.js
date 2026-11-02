@@ -2,7 +2,7 @@ const CONVERSATIONS_DIR = path.join(os.homedir(), '.gemini/antigravity/conversat
 const metricsCache = new Map(); // cascadeId -> { sig, payload }
 const CONVERSATION_ID_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 
-/** Decode supported protobuf wire fields; reject truncation and unsafe numeric values. */
+/** Decode supported protobuf wire fields, preserving valid uint64 scalars without rounding. */
 function parseProto(buf) {
   if (!ArrayBuffer.isView(buf) || buf.BYTES_PER_ELEMENT !== 1) throw new TypeError('Expected protobuf bytes');
   let offset = 0;
@@ -17,8 +17,9 @@ function parseProto(buf) {
       if (byteIndex === 9 && byte > 1) throw new RangeError('Invalid protobuf varint');
       value |= BigInt(byte & 0x7f) << BigInt(byteIndex * 7);
       if (!(byte & 0x80)) {
-        if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new RangeError('Unsafe protobuf integer');
-        return Number(value);
+        // Unknown metadata may contain valid uint64 values or signed negative sentinels.
+        // Preserve these as bigint; validate only the numeric fields used for display later.
+        return value > BigInt(Number.MAX_SAFE_INTEGER) ? value : Number(value);
       }
     }
     throw new RangeError('Invalid protobuf varint');
@@ -26,6 +27,7 @@ function parseProto(buf) {
 
   while (offset < buf.length) {
     const tag = readVarint();
+    if (typeof tag !== 'number') throw new RangeError('Invalid protobuf tag');
     const fieldNumber = Math.floor(tag / 8);
     const wireType = tag % 8;
     if (fieldNumber < 1 || fieldNumber > 0x1fffffff) throw new RangeError('Invalid protobuf field');
@@ -38,7 +40,7 @@ function parseProto(buf) {
     else if (wireType === 1) length = 8;
     else if (wireType === 5) length = 4;
     else throw new RangeError('Unsupported protobuf wire type');
-    if (length > buf.length - offset) throw new RangeError('Truncated protobuf field');
+    if (typeof length !== 'number' || length > buf.length - offset) throw new RangeError('Truncated protobuf field');
     fields.set(fieldNumber, buf.subarray(offset, offset + length));
     offset += length;
   }
