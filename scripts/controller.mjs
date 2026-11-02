@@ -2,15 +2,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {DatabaseSync} from 'node:sqlite';
+import {normalizeConfig,buildInjection,pollSequentially} from './options.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const assets = path.join(directory, 'assets');
 const portFile = path.join(os.homedir(), 'Library/Application Support/Antigravity/DevToolsActivePort');
-const config = JSON.parse(fs.readFileSync(path.join(directory, 'config.json'), 'utf8'));
-if (!['high-contrast', 'claude-desktop-purewhite', 'vintage-deep'].includes(config.preset) || typeof config.metrics !== 'boolean' || typeof config.gemini1m !== 'boolean') throw new Error('Invalid patch config.json');
+const config = normalizeConfig(JSON.parse(fs.readFileSync(path.join(directory, 'config.json'), 'utf8')));
 const sessions = new Map();
 const themeKeys = ['theme-preset-light', 'theme-color-flavor'];
 let sequence = 0;
@@ -20,29 +19,7 @@ let wakeUp;
 /** Load only packaged UTF-8 assets; all paths are relative to this installation. */
 function readAsset(filename) {return fs.readFileSync(path.join(assets, filename), 'utf8');}
 
-const themeModules = ['preset.js', 'dictionary.js', 'localization.js', 'guards.js'];
-if (config.metrics) themeModules.push('metrics-client.js');
-const css = readAsset('theme.css') + (config.metrics ? '\n' + readAsset('metrics.css') : '');
-const modules = themeModules.map(readAsset).join('\n');
-const contextHook = config.gemini1m ? readAsset('gemini-context.js') : 'window.__agGeminiContext?.uninstall?.();';
-const revision = crypto.createHash('sha256').update(JSON.stringify(config) + css + modules + contextHook).digest('hex').slice(0, 16);
-const injection = `(() => {
-  ${contextHook}
-  const run = () => {
-    if (window.__ag_portable_revision === ${JSON.stringify(revision)} && document.getElementById('ag-custom-fonts')) return;
-    Storage.prototype.setItem.call(localStorage,'theme-color-flavor',${JSON.stringify(config.preset)});
-    if (!${config.metrics}) {
-      clearInterval(window.__ag_metrics_route_watcher); window.__ag_metrics_route_watcher = null;
-      window.__ag_metrics_ro?.disconnect();
-      document.getElementById('ag-live-metrics-pill')?.remove();
-      document.getElementById('ag-live-metrics-tooltip')?.remove();
-    }
-    const CSS_CONTENT = ${JSON.stringify(css)};
-    ${modules}
-    window.__ag_portable_revision = ${JSON.stringify(revision)};
-  };
-  if (document.body) run(); else document.addEventListener('DOMContentLoaded',run,{once:true});
-})();`;
+const {revision,injection} = buildInjection(config,readAsset);
 
 /** Accept only the current local application's page and its same-port CDP socket. */
 async function findTargets() {
@@ -78,6 +55,16 @@ async function evaluate(session, expression) {
 
 const metrics = config.metrics ? new vm.Script(readAsset('metrics-server.js') + '\n;({pushMetricsToSession,syncMetricsForSession})').runInNewContext({fs, os, path, DatabaseSync, sendCDP, activeSockets:sessions, console, Buffer}) : null;
 
+/** Coalesce route bindings and periodic refreshes; the next poll observes skipped route changes. */
+async function refreshSessionMetrics(session, cascadeId) {
+  if (!metrics || session.metricsBusy || stopping) return;
+  session.metricsBusy = true;
+  try {
+    if (cascadeId) await metrics.pushMetricsToSession(session,cascadeId,true);
+    else await metrics.syncMetricsForSession(session);
+  } finally {session.metricsBusy=false;}
+}
+
 /** Attach once to a target; validate metrics requests before using a database identifier. */
 async function connect(target) {
   const socket = new WebSocket(target.webSocketDebuggerUrl);
@@ -91,7 +78,7 @@ async function connect(target) {
       if (message.error) pending.reject(new Error(`CDP ${message.error.code}`)); else pending.resolve(message.result);
     } else if (metrics && message.method === 'Runtime.bindingCalled' && message.params.name === '__agRequestMetrics') {
       const cascadeId = message.params.payload;
-      if (/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(cascadeId)) void metrics.pushMetricsToSession(session, cascadeId, true);
+      if (/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(cascadeId)) void refreshSessionMetrics(session,cascadeId);
     }
   });
   socket.addEventListener('close', () => {
@@ -117,7 +104,7 @@ async function backupAppearance(session) {
 
 /** Register one future-document script and apply the same revision to the current page. */
 async function inject(session, persistent) {
-  await backupAppearance(session);
+  if (!config.styleOnly) await backupAppearance(session);
   if (metrics) {
     await sendCDP(session, 'Runtime.enable');
     await sendCDP(session, 'Runtime.addBinding', {name:'__agRequestMetrics'});
@@ -125,7 +112,7 @@ async function inject(session, persistent) {
   }
   if (persistent && !session.scriptId) session.scriptId = (await sendCDP(session, 'Page.addScriptToEvaluateOnNewDocument', {source:injection})).identifier;
   await evaluate(session, injection);
-  if (metrics) await metrics.syncMetricsForSession(session);
+  if (metrics) await refreshSessionMetrics(session);
 }
 
 /** Remove persistent registrations before disconnecting so graceful restarts do not stack hooks. */
@@ -140,7 +127,7 @@ async function disconnect(session) {
 /** Poll sequentially; a closed application remains closed until the user opens it. */
 async function watch() {
   let lastError = '';
-  while (!stopping) {
+  const checkStyles = async () => {
     try {
       for (const target of await findTargets()) {
         if (stopping) break;
@@ -148,20 +135,29 @@ async function watch() {
         if (!session) {session = await connect(target); sessions.set(target.id, session); await inject(session, true);}
         const healthy = await evaluate(session, `Boolean(document.getElementById('ag-custom-fonts') && window.__ag_portable_revision === ${JSON.stringify(revision)} && ${config.gemini1m ? 'window.__agGeminiContext' : '!window.__agGeminiContext'})`);
         if (!healthy) await inject(session, true);
-        if (metrics) await metrics.syncMetricsForSession(session);
       }
       lastError = '';
     } catch (error) {
       if (lastError !== error.message) console.error(new Date().toISOString(), error.message);
       lastError = error.message;
     }
-    if (!stopping) await new Promise(resolve => {const timer = setTimeout(resolve, 2500); wakeUp = () => {clearTimeout(timer); resolve();};});
-  }
+  };
+  const refreshMetrics = metrics ? async () => {
+    for (const session of sessions.values()) {
+      if (stopping) break;
+      await refreshSessionMetrics(session);
+    }
+  } : null;
+  await pollSequentially({heal:checkStyles,metrics:refreshMetrics,stopped:()=>stopping,sleep:delay=>new Promise(resolve=>{
+    const timer=setTimeout(()=>{wakeUp=null;resolve();},delay);
+    wakeUp=()=>{clearTimeout(timer);wakeUp=null;resolve();};
+  })});
   await Promise.allSettled([...sessions.values()].map(disconnect));
 }
 
 const action = process.argv[2] || 'inspect';
 if (action === 'watch') {
+  if (config.styleOnly) throw new Error('Style-only mode has no watcher. Use apply for a one-time injection.');
   for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => {stopping = true; wakeUp?.();});
   await watch();
 } else {
@@ -173,10 +169,15 @@ if (action === 'watch') {
     if (action === 'apply') {await inject(session, false); console.log('Applied current configuration.');}
     else if (action === 'audit') console.log(JSON.stringify(await evaluate(session, readAsset('audit.js')), null, 2));
     else if (action === 'restore') {
+      if (config.styleOnly) {
+        await evaluate(session, `(() => {const backup=window.__ag_style_only_backup;if(!backup)return;const style=document.getElementById('ag-custom-fonts');if(backup.styleExisted&&style)style.textContent=backup.styleText;else style?.remove();if(backup.preset==null)document.documentElement.removeAttribute('data-ag-preset');else document.documentElement.setAttribute('data-ag-preset',backup.preset);delete window.__ag_style_only_backup;delete window.__ag_portable_revision;})()`);
+        console.log('One-time styles removed. No storage or native settings were changed.');
+      } else {
       const backup = JSON.parse(fs.readFileSync(path.join(directory, 'appearance-backup.json'), 'utf8'));
       if (Object.keys(backup).some(key => !themeKeys.includes(key))) throw new Error('Unexpected key in appearance backup.');
       await evaluate(session, `window.__agGeminiContext?.uninstall?.(); for(const [key,value] of Object.entries(${JSON.stringify(backup)})){if(value===null)Storage.prototype.removeItem.call(localStorage,key);else Storage.prototype.setItem.call(localStorage,key,value);}`);
       console.log('Web appearance keys restored. Stop the service, then fully quit and reopen Antigravity. Native Appearance settings and fonts are unchanged.');
+      }
     } else console.log(JSON.stringify(await evaluate(session, `({revision:window.__ag_portable_revision,preset:document.documentElement.dataset.agPreset,gemini1m:!!window.__agGeminiContext,contextWindowTokens:window.__agGeminiContext?.windowTokens,metricsMounted:!!document.getElementById('ag-live-metrics-pill'),actualContextBudget:window.__ag_last_metrics?.maxContextTokens})`), null, 2));
   } finally {await disconnect(session);}
 }

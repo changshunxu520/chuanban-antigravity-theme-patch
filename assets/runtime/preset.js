@@ -34,6 +34,11 @@ function syncPresetAttribute() {
       return;
     }
     const flavor = Storage.prototype.getItem.call(localStorage, "theme-color-flavor") || PRESETS.HIGH_CONTRAST;
+    // An explicit native-style selection must not be mistaken for the legacy warm preset.
+    if (flavor === 'default-light' || flavor === 'off') {
+      document.documentElement.removeAttribute('data-ag-preset');
+      return;
+    }
     const currentBg = (window.getComputedStyle(document.documentElement).getPropertyValue("--background") || "").trim().toUpperCase();
     const isWarmBg = (currentBg === "#FBF9F5" || currentBg === "#FCFCFB");
 

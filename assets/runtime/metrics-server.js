@@ -148,12 +148,15 @@ function readConversationMetrics(cascadeId) {
     const contextLabel = last.maxContextTokens
       ? `${fmtTok(last.ctx)}/${fmtTok(last.maxContextTokens)} (${Math.round(last.ctx / last.maxContextTokens * 100)}%)`
       : fmtTok(last.ctx);
+    // Restore the upstream visual tiers, but base them on this call's measured budget.
+    const contextPercent = last.maxContextTokens ? Math.round(last.ctx / last.maxContextTokens * 100) : null;
+    const contextClass = contextPercent === null ? '' : contextPercent >= 90 ? 'ag-ctx-crit' : contextPercent >= 75 ? 'ag-ctx-warn' : 'ag-ctx-ok';
     const contextBudget = last.maxContextTokens ? `${fmtNum(last.maxContextTokens)} tokens（客户端调用记录）` : '未获取';
 
     const inlineHtml = [
       `<span>${Math.round(displayTps)} tok/s</span><span class="ag-sep">·</span>`,
       `<span>TTFT ${last.ttft.toFixed(1)}s</span><span class="ag-sep">·</span>`,
-      `<span>Ctx ${contextLabel}</span><span class="ag-sep">·</span>`,
+      `<span${contextClass ? ` class="${contextClass}"` : ''}>Ctx ${contextLabel}</span><span class="ag-sep">·</span>`,
       `<span>Out ${fmtTok(last.outTok)}</span>`
     ].join('');
 

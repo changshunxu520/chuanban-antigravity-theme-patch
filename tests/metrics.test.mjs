@@ -114,6 +114,14 @@ test('latest generation without usage is not measured zero or previous-call usag
   assert.equal(result.inlineHtml,undefined);
 });
 
+test('retains upstream visual tiers using the recorded budget, never a fixed 256k threshold', testContext => {
+  const api = fixture(testContext);
+  api.createDatabase(FIRST_ID,[generation({limit:983040,input:737280,cache:0})]);
+  api.createDatabase(SECOND_ID,[generation({limit:100000,input:90000,cache:0})]);
+  assert.match(api.readConversationMetrics(FIRST_ID).inlineHtml,/class="ag-ctx-warn"/);
+  assert.match(api.readConversationMetrics(SECOND_ID).inlineHtml,/class="ag-ctx-crit"/);
+});
+
 test('switching conversations keeps each budget isolated', testContext => {
   const api = fixture(testContext);
   api.createDatabase(FIRST_ID, [generation({ limit: 256000 })]);

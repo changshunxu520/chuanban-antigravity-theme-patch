@@ -15,6 +15,7 @@ function fixture() {
   fs.mkdirSync(path.join(source, 'scripts'));
   for (const name of ['preset.js', 'dictionary.js', 'localization.js', 'guards.js', 'metrics-client.js', 'metrics-server.js', 'theme.css', 'metrics.css', 'audit.js', 'gemini-context.js']) fs.writeFileSync(path.join(source, 'assets/runtime', name), '// fixture\n');
   fs.writeFileSync(path.join(source, 'scripts/controller.mjs'), '// fixture controller\n');
+  fs.writeFileSync(path.join(source, 'scripts/options.mjs'), '// fixture options\n');
   return {root, source, destination:path.join(root, 'destination with spaces')};
 }
 
@@ -22,7 +23,7 @@ test('default install is portable, opt-out 1M, preserves spaces, refuses overwri
   const data = fixture();
   try {
     const result = installPackage({destination:data.destination, noService:true}, data.source);
-    assert.deepEqual(result.config, {preset:'high-contrast', metrics:true, gemini1m:false});
+    assert.deepEqual(result.config, {preset:'high-contrast',fontScheme:'A',metrics:true,gemini1m:false,localize:true,fixes:true,styleOnly:false});
     assert.ok(fs.existsSync(path.join(data.destination, 'assets/theme.css')));
     assert.equal(JSON.parse(fs.readFileSync(path.join(data.destination, 'install-manifest.json'))).destination, data.destination);
     assert.throws(() => installPackage({destination:data.destination, noService:true}, data.source), /--upgrade/);
@@ -64,6 +65,32 @@ test('plist escapes XML-sensitive characters and uses explicit node path', () =>
   assert.doesNotMatch(content, /\/Users\/xucs/);
 });
 
+test('style-only deploys without a service and preserves optional font selection through uninstall', () => {
+  const data = fixture();
+  try {
+    const installed = installPackage({destination:data.destination,styleOnly:true,fontScheme:'B'},data.source);
+    assert.equal(installed.service,false);
+    assert.deepEqual(installed.config,{preset:'high-contrast',fontScheme:'B',metrics:false,gemini1m:false,localize:false,fixes:false,styleOnly:true});
+    assert.ok(fs.existsSync(path.join(data.destination,'options.mjs')));
+    const removed = uninstallPackage(data.destination);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(removed.backup,'config.json'))).fontScheme,'B');
+  } finally {fs.rmSync(data.root,{recursive:true,force:true});}
+});
+
+test('feature switches/default-light are independent and conflicts leave no destination', () => {
+  const data = fixture();
+  try {
+    assert.throws(()=>installPackage({destination:data.destination,styleOnly:true,gemini1m:true},data.source),/conflicts/);
+    assert.equal(fs.existsSync(data.destination),false);
+    const result=installPackage({destination:data.destination,noService:true,preset:'default-light',fontScheme:'C',noLocalization:true,noFixes:true},data.source);
+    assert.equal(result.config.metrics,true);
+    assert.equal(result.config.gemini1m,false);
+    assert.equal(result.config.localize,false);
+    assert.equal(result.config.fixes,false);
+    assert.equal(result.config.preset,'default-light');
+  } finally {fs.rmSync(data.root,{recursive:true,force:true});}
+});
+
 test('CLI --help and -h explain options and never create the requested destination', () => {
   const data = fixture();
   try {
@@ -71,7 +98,7 @@ test('CLI --help and -h explain options and never create the requested destinati
     const installer = fileURLToPath(new URL('../scripts/install.mjs', import.meta.url));
     for (const flag of ['--help', '-h']) {
       const output = execFileSync(process.execPath, [installer, 'install', '--dest', data.destination, '--no-service', flag], {encoding:'utf8'});
-      for (const expected of ['--gemini-1m', '--no-metrics', '--upgrade', 'com.chuanban.antigravity-theme-patch', '--experimental-sqlite', 'Legacy migration', 'install-manifest.json']) assert.ok(output.includes(expected), expected);
+      for (const expected of ['--gemini-1m', '--no-metrics', '--font-scheme','--style-only','--no-localization','--no-fixes','default-light','--upgrade', 'com.chuanban.antigravity-theme-patch', '--experimental-sqlite', 'Legacy migration', 'install-manifest.json']) assert.ok(output.includes(expected), expected);
       assert.equal(fs.existsSync(data.destination), false);
       assert.deepEqual(fs.readdirSync(data.root).sort(), before);
     }

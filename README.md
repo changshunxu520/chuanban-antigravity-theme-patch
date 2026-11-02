@@ -10,6 +10,7 @@ Antigravity桌面客户端的暖纸主题、字体分层、局部汉化与实时
 - **Gemini 4默认1M**：独立可选项，默认关闭；改变真实发送参数，覆盖普通界面的gRPC-Web JSON。
 - **可运行安装资产**：分文件维护主题、词典、指标和请求增强，提供备份、服务与恢复流程。
 - **可核实验收**：区分API测试、普通界面发送、完整重启；以后台调用记录为准。
+- **v4完整性复核**：保留341词条及13类动态规则，补齐A/B/C字体、纯样式轻量路线、独立开关、1200ms指标刷新和真实预算分级颜色，见逐项覆盖表。
 
 ## 使用
 
@@ -42,6 +43,9 @@ node scripts/install.mjs --preset high-contrast
 - [关闭、卸载与恢复](references/recovery.md)
 - [字体检查](references/fonts.md)
 - [来源与改动记录](references/provenance.md)
+- [Notion v4逐项覆盖与有意差异](references/notion-v4-coverage.md)
+- [配色与A/B/C字体选择](references/appearance.md)
+- [轻量路线与Windows原则](references/platforms-lite.md)
 
 1M增强依赖补丁服务，长会话可能增加延迟和额度消耗；不改变安全权限或账号配额。尚未做近百万tokens输入压力测试，客户端升级后应重新验证。
 

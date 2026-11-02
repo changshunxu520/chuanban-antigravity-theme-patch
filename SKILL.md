@@ -6,7 +6,7 @@ compatibility: macOS；Node.js >=22.5，建议24；Antigravity已安装且本机
 
 # Antigravity 界面与上下文补丁
 
-在船板原主题方案上整理的维护 fork。使用完整仓库中的脚本与资产；来源、版本见 [references/provenance.md](references/provenance.md)。不是官方扩展，不承诺跨版本永远有效。
+在船板原主题方案上整理的维护 fork。使用完整仓库中的脚本与资产；来源、版本见 [references/provenance.md](references/provenance.md)，完整性映射见 [references/notion-v4-coverage.md](references/notion-v4-coverage.md)。不是官方扩展，不承诺跨版本永远有效。
 
 ## 约束与默认值
 
@@ -31,9 +31,9 @@ compatibility: macOS；Node.js >=22.5，建议24；Antigravity已安装且本机
 
 配色：`high-contrast`（默认）、`claude-desktop-purewhite`、`vintage-deep`。后者是牛皮纸配色，不等于官方Dark模式。
 
-无需指标时加 `--no-metrics`；明确要求1M时才加 `--gemini-1m`，并先读第4节。不要把未询问的可选功能一并开启。
+无需指标时加 `--no-metrics`；汉化与设置/缩放增强可分别用 `--no-localization`、`--no-fixes` 关闭。明确要求1M时才加 `--gemini-1m`，并先读第4节。不要把未询问的可选功能一并开启。
 
-按 [references/fonts.md](references/fonts.md) 安装用户可使用的字体。安装器不下载字体。核对字体真实内部名称，缺失时明确标记系统回退，不能仅凭CSS字体列表宣称生效。
+按 [references/fonts.md](references/fonts.md) 安装用户可使用的字体。安装器不下载字体。核对字体真实内部名称，缺失时明确标记系统回退，不能仅凭CSS字体列表宣称生效。原方案A/B/C均保留：`--font-scheme A` 默认融合、B全更纱、C原生苹方回退，见 [references/appearance.md](references/appearance.md)。
 
 ## 3. 安装或升级
 
@@ -51,7 +51,11 @@ node scripts/install.mjs --preset high-contrast --gemini-1m
 
 已有本安装器管理的安装使用 `--upgrade`，先检查完整备份位置，并完整传入本次选择的功能。没有install-manifest.json的旧安装不能直接升级：先核对并停止旧服务，将旧目录和plist完整移到备份，再安装，避免两个守护进程同时注入。`--no-service`仅部署文件，不代表已常驻；可根据控制器帮助手动运行。
 
-安装目录下的 `config.json` 保存 `preset`、`metrics`、`gemini1m`。运行资产在 `assets/`。安装器用真实Node路径生成用户LaunchAgent `com.chuanban.antigravity-theme-patch`，不修改App原包、不自动重启Antigravity、不修改原生主题模式。根据用户选择在原生外观页面切换Light。Node22.5–22.12手动运行控制器需加 `--experimental-sqlite`，服务会自动加该参数，建议Node24。
+安装目录下的 `config.json` 保存 `preset`、`fontScheme`、`metrics`、`gemini1m`、`localize`、`fixes`、`styleOnly`。运行资产在 `assets/`。安装器用真实Node路径生成用户LaunchAgent `com.chuanban.antigravity-theme-patch`，不修改App原包、不自动重启Antigravity、不修改原生主题模式。根据用户选择在原生外观页面切换Light。Node22.5–22.12手动运行控制器需加 `--experimental-sqlite`，服务会自动加该参数，建议Node24。
+
+只要字体/颜色时使用 `--style-only`，它不创建常驻项并关闭其他增强；再手动执行安装目录的controller.mjs apply。与1M选项互斥。完整模式的 `--no-service` 只表示不注册服务，不等于纯样式模式。官方三基色轻量路线、Windows路径及启动原则见 [references/platforms-lite.md](references/platforms-lite.md)。
+
+恢复原生样式可用 `--preset default-light`，不加载自定义主题/字体CSS。不要声称点击原生Default Light在所有版本都可自动关闭补丁。临时热切换、持久配置切换和恢复差异见appearance.md。功能开关变化后应完全退出重开客户端，避免旧监听残留。
 
 Windows/Linux仅先准备可审查文件，单独适配服务管理；不能直接执行macOS服务步骤或宣称常驻成功。
 
@@ -95,7 +99,7 @@ Windows/Linux仅先准备可审查文件，单独适配服务管理；不能直�
 1. 配色计算值、真实FontFace加载、深浅主题隔离。
 2. 导航可翻译，代码/终端/正文/输入区/路径不被修改；运行主包差量扫描，不能承诺新版“零遗漏”。
 3. 设置可正常打开，TanStack路由state保留；不重复写相同DOM文本；缺少原生缩放接口时不吞快捷键。
-4. 指标来自同次调用；未知预算降级；宽窄布局、会话切换正确。
+4. 指标来自同次调用；未知预算降级；75%/90%分级只表示真实预算占比，不是压缩倒计时。宽窄布局、会话切换与body级双层悬浮卡正确。指标刷新1200ms、自愈2500ms，路由探测400ms，不保证端到端小于5ms。
 5. 若启用1M，**从普通聊天界面发短消息**，核对新生成记录的max_context_tokens与最终执行配置；然后完全退出重开，从首页新建会话再测。直接构造API请求不能替代这两步。
 6. 验证其他模型不改、1M关闭时不装包装函数，以及服务重启/客户端重启后的状态。
 

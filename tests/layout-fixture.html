@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><title>Antigravity v4 layout fixture</title>
+<link rel="stylesheet" href="/assets/runtime/metrics.css">
+<style>
+body {font:14px system-ui;padding:32px;--foreground:#1F1E1D;--card:#F9F7F2;--font-mono:monospace;--card-border:rgba(0,0,0,.35);background:#FCFCFB;color:var(--foreground)}
+body.theme-dark {--foreground:#E5E5E5;--muted-foreground:#BBB;--card:#24273A;background:#24273A}
+#controls {margin-bottom:80px}button{padding:8px}#fixture-box{width:900px;max-width:100%}.surface-composer-card{display:flex;flex-direction:column;border:1px solid #999;padding:8px}.footer{display:flex;width:100%;align-items:center;justify-content:space-between}.left{display:flex;align-items:center}.right{display:flex;width:140px;flex-shrink:0;justify-content:flex-end}.model{width:220px;box-sizing:border-box}.compose{height:60px}
+</style>
+<body class="theme-light"><div id="controls"><button id="wide">宽栏</button><button id="narrow">窄栏</button><button id="dark">深色</button></div>
+<div id="fixture-box"><div id="antigravity.agentSidePanelInputBox"><div class="surface-composer-card"><div class="compose">布局验收：仅使用合成指标，不读取真实会话</div><div class="footer flex w-full items-center justify-between"><div class="left"><button class="model" data-testid="model-selector-trigger">Gemini 4 示例模型</button></div><div class="right"><button data-testid="send-button">发送</button></div></div></div></div></div>
+<script src="/assets/runtime/metrics-client.js"></script>
+<script>
+const sample={cascadeId:'00000000-0000-4000-8000-000000000001',hasData:true,inlineHtml:'40 tok/s · TTFT 2.0s · Ctx 16k/983k (2%)',tooltipHtml:'<div class="ag-tt-hdr">本轮最新调用</div><div class="ag-tt-row"><span class="ag-tt-lbl">上下文预算</span><span class="ag-tt-val">983,040</span></div><div class="ag-tt-hdr ag-tt-sec">当前会话累计</div>'};
+window.__ag_render_metrics(sample);
+document.getElementById('wide').onclick=()=>document.getElementById('fixture-box').style.width='900px';
+document.getElementById('narrow').onclick=()=>document.getElementById('fixture-box').style.width='380px';
+document.getElementById('dark').onclick=()=>document.body.className='theme-dark';
+</script></body></html>

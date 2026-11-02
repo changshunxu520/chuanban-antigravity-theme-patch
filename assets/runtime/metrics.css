@@ -60,3 +60,13 @@
 #ag-live-metrics-tooltip .ag-tt-row { display: flex; justify-content: space-between; gap: 10px; font-size: 11px !important; }
 #ag-live-metrics-tooltip .ag-tt-lbl { color: #57534E !important; flex-shrink: 0; }
 #ag-live-metrics-tooltip .ag-tt-val { color: #0A0A0A !important; font-weight: 500 !important; text-align: right; }
+
+/* Dark mode keeps the native foreground palette instead of the light-paper ink overrides. */
+body:not(.theme-light) #ag-live-metrics-pill #ag-live-metrics-text,
+body:not(.theme-light) #ag-live-metrics-tooltip .ag-tt-hdr,
+body:not(.theme-light) #ag-live-metrics-tooltip .ag-tt-val {
+  color: var(--foreground, #E5E5E5) !important;
+}
+body:not(.theme-light) #ag-live-metrics-tooltip .ag-tt-lbl {
+  color: var(--muted-foreground, #B5B5B5) !important;
+}
