@@ -41,3 +41,12 @@ test('all v4 palette and ink values are preserved',()=>{
  const css=readAsset('theme.css');
  for(const value of ['#FCFCFB','#F7F5F0','#F9F7F2','#0A0A0A','#FBFBF9','#EDECE9','#F3F2EF','#F0F0EE','#FBF9F5','#2C2B29','#D97757','#F1E8DC','#E6DCCE','#E0D4C3','font-weight: 450','font-weight: 520','font-weight: 500','-0.012em','0.2px','0.15px','line-height: 1.62'])assert.ok(css.includes(value),value);
 });
+
+test('composer border ink does not become the new-chat environment-row fill',()=>{
+ const css=readAsset('theme.css');
+ const rule=css.match(/html\[data-ag-preset="high-contrast"\] \[id="antigravity\.agentSidePanelInputBox"\] \{([^}]+)\}/);
+ assert.ok(rule,'composer shell rule exists');
+ assert.match(rule[1],/background-color: var\(--card\)/);
+ assert.match(rule[1],/box-shadow: inset 0 0 0 1px var\(--card-border\)/);
+ assert.doesNotMatch(rule[1],/background-color: var\(--card-border\)/);
+});

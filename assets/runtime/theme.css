@@ -80,7 +80,11 @@ html[data-ag-preset="high-contrast"] .bg-sidebar { background-color: var(--sideb
 html[data-ag-preset="chuanban-warm-white"] body,
 html[data-ag-preset="high-contrast"] body { background-color: var(--background) !important; color: var(--foreground) !important; }
 html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"],
-html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] { background-color: var(--card-border) !important; }
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] {
+  /* The new-chat environment row is transparent: border ink must not fill its background. */
+  background-color: var(--card) !important;
+  box-shadow: inset 0 0 0 1px var(--card-border);
+}
 html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] > div.bg-card,
 html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] > div.bg-card { background-color: var(--card) !important; }
 html[data-ag-preset="chuanban-warm-white"] a[class*="inline-flex items-center"],

@@ -1,6 +1,6 @@
 {
   "name": "chuanban-antigravity-theme-patch",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "description": "Antigravity runtime theme skill with recorded context metrics and opt-in Gemini 4 context defaults",
   "engines": {"node": ">=22.5.0"},

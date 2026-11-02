@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN" data-ag-preset="high-contrast"><meta charset="UTF-8"><title>Composer background regression</title>
+<link rel="stylesheet" href="/assets/runtime/theme.css">
+<style>
+body{padding:32px;background:#FCFCFB}.surface-composer{max-width:900px;padding:1px;border-radius:16px;display:flex;flex-direction:column}.bg-card-border{background:var(--card-border)}.bg-card{background:var(--card)}.surface-composer-card{padding:20px;border-radius:15px}.environment{padding:18px}.grid{display:grid}.native-dark{--background:#24273A;--foreground:#EEE;--card:#303448;--card-border:#616677}#controls{margin-bottom:24px}
+</style>
+<body class="theme-light"><div id="controls"><button id="new">新建页</button><button id="conversation">会话页</button></div>
+<div id="antigravity.agentSidePanelInputBox" class="surface-composer bg-card-border"><div class="surface-composer-card bg-card">输入框内容与模型控件</div><div id="environment" class="grid"><div style="overflow:hidden"><div class="environment">Local Checkout · sample-branch</div></div></div></div>
+<script>document.getElementById('new').onclick=()=>document.getElementById('environment').hidden=false;document.getElementById('conversation').onclick=()=>document.getElementById('environment').hidden=true;</script>
+</body></html>
