@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+*.log
+*.db
+*.db-wal
+*.db-shm
+*.ttf
+*.ttc
+*.otf
+*.7z
+*.zip
+config.json
+appearance-backup.json
+*-workspace/

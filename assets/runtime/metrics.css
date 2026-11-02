@@ -1,0 +1,62 @@
+/* 严格锁定左(模型) - 中(指标胶囊) - 右(模式与发送按钮)三栏布局 */
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="middle"] > div:first-child,
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="bottom"] > div:first-child {
+  overflow: hidden !important; min-width: 0 !important;
+}
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="middle"] > div:first-child > *:not(#ag-live-metrics-pill),
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="bottom"] > div:first-child > *:not(#ag-live-metrics-pill) {
+  flex-shrink: 0 !important;
+}
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="middle"] > div:last-child,
+[id="antigravity.agentSidePanelInputBox"] div[data-ag-row-mode="bottom"] > div:last-child {
+  flex-shrink: 0 !important; margin-left: auto !important;
+}
+#ag-live-metrics-pill {
+  position: relative; display: none; align-items: center;
+  flex: 1 1 0% !important; max-width: max-content !important; min-width: 0 !important;
+  height: 22px; margin-left: 6px; margin-right: 4px; padding: 0 4px 0 8px;
+  border-left: 1px solid rgba(0, 0, 0, 0.22);
+  font-family: var(--font-mono) !important; font-variant-numeric: tabular-nums;
+  font-size: 11px !important; line-height: 1 !important;
+  white-space: nowrap; overflow: hidden; user-select: none; cursor: default;
+}
+/* 极窄下物理位于 bottomRow 正下方第二行 (surface-composer-card flex-col 子项) */
+#ag-live-metrics-pill[data-ag-row-mode="bottom"] {
+  flex: 0 0 auto !important;
+  width: calc(100% - 8px) !important; max-width: calc(100% - 8px) !important;
+  height: 20px !important; margin: 1px 4px 2px 4px !important;
+  padding: 2px 4px 0 6px !important;
+  border-left: none !important; border-top: 1px dashed rgba(0, 0, 0, 0.14) !important;
+}
+#ag-live-metrics-pill #ag-live-metrics-text {
+  display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-mono) !important; font-size: 11px !important; font-weight: 500 !important;
+  letter-spacing: -0.02em !important; color: #262422 !important; opacity: 0.92 !important;
+}
+#ag-live-metrics-pill:hover #ag-live-metrics-text { opacity: 1 !important; color: #0A0A0A !important; }
+#ag-live-metrics-pill .ag-sep { margin: 0 3.5px; opacity: 0.45 !important; }
+#ag-live-metrics-pill .ag-ctx-warn { color: #B45309 !important; font-weight: 600 !important; }
+#ag-live-metrics-pill .ag-ctx-crit { color: #DC2626 !important; font-weight: 700 !important; }
+
+/* Body 级 Fixed 悬浮详情卡，彻底规避 overflow:hidden 裁剪 */
+#ag-live-metrics-tooltip {
+  position: fixed; z-index: 2147483647; min-width: 370px; max-width: 450px;
+  padding: 10px 12px; border-radius: 8px;
+  background-color: var(--card, #F9F7F2) !important;
+  border: 1px solid var(--card-border, rgba(0, 0, 0, 0.35)) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-mono) !important; font-variant-numeric: tabular-nums;
+  font-size: 11px !important; line-height: 1.55 !important;
+  color: var(--foreground, #1F1E1D) !important;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(4px); transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+}
+#ag-live-metrics-tooltip[data-visible="1"] { opacity: 1 !important; visibility: visible !important; transform: translateY(0); }
+#ag-live-metrics-tooltip .ag-tt-hdr {
+  font-weight: 600 !important; font-size: 11px !important; color: #0A0A0A !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14); padding-bottom: 3px; margin-bottom: 4px;
+}
+#ag-live-metrics-tooltip .ag-tt-sec { margin-top: 8px; }
+#ag-live-metrics-tooltip .ag-tt-row { display: flex; justify-content: space-between; gap: 10px; font-size: 11px !important; }
+#ag-live-metrics-tooltip .ag-tt-lbl { color: #57534E !important; flex-shrink: 0; }
+#ag-live-metrics-tooltip .ag-tt-val { color: #0A0A0A !important; font-weight: 500 !important; text-align: right; }

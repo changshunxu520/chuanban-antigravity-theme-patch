@@ -1,0 +1,162 @@
+/* 0. 显式映射本机已安装的 Anthropic 官方原版字体 */
+@font-face {
+  font-family: 'Anthropic Serif';
+  src: local('AnthropicSerifWebWeb-TextLight');
+  font-weight: 300 800; font-style: normal;
+}
+@font-face {
+  font-family: 'Anthropic Serif';
+  src: local('Anthropic Serif Web Text Italic'), local('AnthropicSerif-Italic');
+  font-weight: 400; font-style: italic;
+}
+@font-face {
+  font-family: 'Anthropic Serif';
+  src: local('AnthropicSerifWebWeb-TextLight');
+  font-weight: 500 700; font-style: normal;
+}
+@font-face {
+  font-family: 'Anthropic Sans';
+  src: local('AnthropicSansWebVariable-TextRegular');
+  font-weight: 300 800; font-style: normal;
+}
+@font-face {
+  font-family: 'Anthropic Sans';
+  src: local('AnthropicSansWebVariable-TextRegular');
+  font-weight: 500 700; font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anthropic Mono';
+  src: local('AnthropicMonoWebWeb-Regular');
+  font-weight: 300 800; font-style: normal;
+}
+/* 1. 四层字体排版体系 (A 方案：Claude 原版书卷 + 更纱 Slab 深度融合) */
+:root {
+  --font-sans: 'Anthropic Sans', 'Styrene B', system-ui, -apple-system, BlinkMacSystemFont, 'Sarasa UI SC', '更纱黑体 UI SC', sans-serif !important;
+  --font-mono: 'Anthropic Mono', 'Sarasa Mono Slab SC', '等距更纱黑体 Slab SC', ui-monospace, SFMono-Regular, monospace !important;
+  --vscode-font-family: 'Anthropic Sans', 'Styrene B', system-ui, -apple-system, BlinkMacSystemFont, 'Sarasa UI SC', '更纱黑体 UI SC', sans-serif !important;
+  --vscode-editor-font-family: 'Anthropic Mono', 'Sarasa Mono Slab SC', '等距更纱黑体 Slab SC', ui-monospace, SFMono-Regular, monospace !important;
+  --vscode-chat-font-family: 'Anthropic Serif', 'Tiempos Text', Georgia, Cambria, 'Sarasa Mono Slab SC', '等距更纱黑体 Slab SC', 'Sarasa Gothic SC', '更纱黑体 SC', serif !important;
+}
+body, html {
+  font-family: var(--font-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.prose, .markdown, [class*="markdown"], [class*="prose"], .select-text p, .select-text li, .select-text ol, .select-text ul, .select-text blockquote, .select-text h1, .select-text h2, .select-text h3, .select-text h4 {
+  font-family: var(--vscode-chat-font-family) !important;
+  line-height: 1.62;
+  letter-spacing: -0.003em;
+}
+code, pre, kbd, samp, [class*="font-mono"], .monaco-editor, .xterm, [class*="terminal"], [class*="code-block"], .select-text code, .select-text pre, .select-text pre span {
+  font-family: var(--font-mono) !important;
+  font-variant-ligatures: none;
+}
+div[contenteditable="true"], textarea, input[type="text"], input[type="search"], [role="textbox"], .ProseMirror {
+  font-family: 'Sarasa Mono Slab SC', '等距更纱黑体 Slab SC', 'Anthropic Mono', monospace !important;
+  letter-spacing: 0.01em;
+}
+
+/* 2. 预设 1：高对比版（当前默认） */
+html[data-ag-preset="chuanban-warm-white"] body.theme-light,
+html[data-ag-preset="high-contrast"] body.theme-light {
+  --background: #FCFCFB !important;
+  --foreground: #1F1E1D !important;
+  --primary: #D97757 !important;
+  --accent: #D97757 !important;
+  --sidebar: #F7F5F0 !important;
+  --sidebar-secondary: #ECE9E1 !important;
+  --sidebar-muted: #F2EFE9 !important;
+  --sidebar-border: rgba(0, 0, 0, 0.35) !important;
+  --border: rgba(0, 0, 0, 0.38) !important;
+  --vscode-sideBar-background: #F7F5F0 !important;
+  --card: #F9F7F2 !important;
+  --card-border: rgba(0, 0, 0, 0.35) !important;
+  --secondary-foreground: #0A0A0A !important;
+  --muted-foreground: #1A1A1A !important;
+}
+html[data-ag-preset="chuanban-warm-white"] .bg-sidebar,
+html[data-ag-preset="high-contrast"] .bg-sidebar { background-color: var(--sidebar) !important; }
+html[data-ag-preset="chuanban-warm-white"] body,
+html[data-ag-preset="high-contrast"] body { background-color: var(--background) !important; color: var(--foreground) !important; }
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"],
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] { background-color: var(--card-border) !important; }
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] > div.bg-card,
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] > div.bg-card { background-color: var(--card) !important; }
+html[data-ag-preset="chuanban-warm-white"] a[class*="inline-flex items-center"],
+html[data-ag-preset="high-contrast"] a[class*="inline-flex items-center"],
+html[data-ag-preset="chuanban-warm-white"] .bg-sidebar a,
+html[data-ag-preset="high-contrast"] .bg-sidebar a,
+html[data-ag-preset="chuanban-warm-white"] .bg-sidebar button,
+html[data-ag-preset="high-contrast"] .bg-sidebar button { border-color: rgba(0, 0, 0, 0.32) !important; }
+html[data-ag-preset="chuanban-warm-white"] .bg-border,
+html[data-ag-preset="high-contrast"] .bg-border { background-color: rgba(0, 0, 0, 0.28) !important; }
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] [class*="text-secondary-foreground"],
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] [class*="text-secondary-foreground"],
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] button,
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] button,
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] span,
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] span,
+html[data-ag-preset="chuanban-warm-white"] [id="antigravity.agentSidePanelInputBox"] svg,
+html[data-ag-preset="high-contrast"] [id="antigravity.agentSidePanelInputBox"] svg { color: #0A0A0A !important; opacity: 1 !important; }
+
+/* 3. 预设 2：ClaudeDesktop 净白 */
+html[data-ag-preset="claude-desktop-official"] body.theme-light,
+html[data-ag-preset="claude-desktop-purewhite"] body.theme-light {
+  --background: #FCFCFB !important;
+  --foreground: #141413 !important;
+  --primary: #D97757 !important;
+  --accent: #D97757 !important;
+  --sidebar: #FBFBF9 !important;
+  --sidebar-secondary: #EDECE9 !important;
+  --sidebar-muted: #F3F2EF !important;
+  --sidebar-border: #F0F0EE !important;
+  --border: #E8E6E1 !important;
+  --vscode-sideBar-background: #FBFBF9 !important;
+}
+html[data-ag-preset="claude-desktop-official"] .bg-sidebar,
+html[data-ag-preset="claude-desktop-purewhite"] .bg-sidebar { background-color: var(--sidebar) !important; }
+html[data-ag-preset="claude-desktop-official"] body,
+html[data-ag-preset="claude-desktop-purewhite"] body { background-color: var(--background) !important; color: var(--foreground) !important; }
+
+/* 4. 预设 3：复古深色 */
+html[data-ag-preset="absoulutely-chuanban"] body.theme-light,
+html[data-ag-preset="vintage-deep"] body.theme-light {
+  --background: #FBF9F5 !important;
+  --foreground: #2C2B29 !important;
+  --primary: #D97757 !important;
+  --accent: #D97757 !important;
+  --sidebar: #F1E8DC !important;
+  --sidebar-secondary: #E6DCCE !important;
+  --sidebar-muted: #EAE0D2 !important;
+  --sidebar-border: #E0D4C3 !important;
+  --border: #E2D7C7 !important;
+  --vscode-sideBar-background: #F1E8DC !important;
+}
+html[data-ag-preset="absoulutely-chuanban"] .bg-sidebar,
+html[data-ag-preset="vintage-deep"] .bg-sidebar { background-color: var(--sidebar) !important; }
+html[data-ag-preset="absoulutely-chuanban"] body,
+html[data-ag-preset="vintage-deep"] body { background-color: var(--background) !important; color: var(--foreground) !important; }
+
+@scope (body.theme-light) {
+/* 5. 界面排版扎实度与温润墨感渲染（Solid Ink Optimization） */
+.bg-sidebar a, .bg-sidebar button, .bg-sidebar [class*="truncate"], .bg-sidebar [class*="text-sm"], .bg-sidebar [class*="text-xs"], aside a, aside button {
+  font-weight: 450 !important; letter-spacing: -0.012em !important; color: #262422 !important; text-rendering: optimizeLegibility; text-shadow: 0 0 0.2px rgba(38, 36, 34, 0.35);
+}
+button[data-testid="project-header"], button[data-project-card="true"], [data-project-label], [data-subtext] span[class*="text-muted"], span:has(> svg) + span {
+  font-weight: 450 !important; color: #383533 !important; text-shadow: 0 0 0.15px rgba(38, 36, 34, 0.25) !important;
+}
+button[data-testid="project-header"] span, button[data-project-card="true"] span {
+  font-weight: 450 !important; color: #2C2B29 !important; text-shadow: 0 0 0.15px rgba(38, 36, 34, 0.25) !important; letter-spacing: -0.01em !important;
+}
+[data-testid="conversation-row-sidebar"][data-selected="true"], [data-testid="conversation-row-sidebar"][data-selected="true"] span, .bg-sidebar [data-active="true"], .bg-sidebar [data-active="true"] span, .bg-sidebar [aria-selected="true"] {
+  font-weight: 520 !important; color: #0A0A0A !important; text-shadow: 0 0 0.25px rgba(10, 10, 10, 0.4);
+}
+.bg-sidebar [class*="text-muted"], .bg-sidebar [class*="text-[11px]"], .bg-sidebar [class*="uppercase"] {
+  font-weight: 500 !important; letter-spacing: -0.005em !important; color: #7A7670 !important;
+}
+button, [role="button"], select { letter-spacing: -0.012em; }
+[id="antigravity.agentSidePanelInputBox"] [class*="text-secondary-foreground"], [id="antigravity.agentSidePanelInputBox"] button, [id="antigravity.agentSidePanelInputBox"] span {
+  font-weight: 500 !important; letter-spacing: -0.012em !important; text-shadow: 0 0 0.25px rgba(10, 10, 10, 0.4);
+}
+}

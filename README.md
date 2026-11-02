@@ -1,52 +1,48 @@
 # chuanban-antigravity-theme-patch
 
-> **Google Antigravity 客户端界面补丁 Skill**  
-> *Warm-paper theme, layered typography, partial localization & settings-deadlock fix for Google Antigravity — via non-invasive CDP runtime injection.*
+Antigravity桌面客户端的暖纸主题、字体分层、局部汉化与实时指标技能。通过本机CDP注入，不修改应用原包。
 
-**极简介绍**：船板自用 Antigravity 界面补丁 Skill。引导执行端 Agent（Claude Code / Codex / Antigravity 等）在用户电脑上制作并常驻安装一套属于自己的 Antigravity 界面补丁——Claude 式暖象牙纸配色预设（三套可切换）、牛皮纸侧栏、更纱黑体 + Anthropic 官方字体三层排版、界面局部汉化、设置弹窗白屏死锁修复。基于 Chrome DevTools Protocol 运行时动态注入，**不修改 App 原包、不重新打包 .asar、不破坏系统签名**，随时可一键撤销回出厂状态。
+这是 [Anarcadia原仓库](https://github.com/Anarcadia/chuanban-antigravity-theme-patch) 的维护fork，基于原主题方案和 [Notion v4](https://chuanban.notion.site/chuanban-antigravity-theme-patch-db7c5846f37546be9481cd791aed0554) 整理可复用安装器。原作者：船板 / Anarcadia；本fork维护与验证：徐长顺。
 
----
+## 本fork的变化
 
-## 这是什么
+- **真实上下文**：从每次调用记录读取预算，替代固定256k；未知时不猜。
+- **Gemini 4默认1M**：独立可选项，默认关闭；改变真实发送参数，覆盖普通界面的gRPC-Web JSON。
+- **可运行安装资产**：分文件维护主题、词典、指标和请求增强，提供备份、服务与恢复流程。
+- **可核实验收**：区分API测试、普通界面发送、完整重启；以后台调用记录为准。
 
-`chuanban-antigravity-theme-patch` 是一份写给执行端 Agent 的一次性安装说明书（Skill）。把它交给 Claude Code、Codex 或 Antigravity 自己，它会按蓝图在你的机器上搭好一套常驻补丁：
+## 使用
 
-- **🎨 三套配色预设**：高对比版（默认，暖燕麦边栏 + 净白主区 + 近纯黑文字）、ClaudeDesktop 净白、复古深色（黄棕牛皮纸双栏），`localStorage` 一个键秒级热切换；
-- **🔤 三层字体排版**：UI 几何无衬线（Anthropic Sans + 更纱 UI）→ 正文书卷衬线（Anthropic Serif + 更纱 Slab）→ 代码严格 1:2 等宽（Anthropic Mono + 更纱 Mono Slab），输入框独立配 Codex 同款打字机粗衬线；
-- **🇨🇳 界面局部汉化**：只汉化导航、设置面板与状态文案，代码块、终端、对话正文严格排除，绝不误伤；
-- **🔧 两个官方 Bug 自愈**：设置弹窗白屏死锁（自定义预设名污染 localStorage）与 TanStack Router `settingsOpen=true` 残留死锁，均已在注入层修复。
+将完整仓库交给执行端Agent，按 [SKILL.md](SKILL.md) 操作。不要只复制SKILL.md而丢失scripts、assets和references。
 
-三条底线：不改 App 包与 `.asar`；注入幂等（固定 id、全局标记，重复执行不叠加）；随时可一键撤销。
+```sh
+git clone https://github.com/changshunxu520/chuanban-antigravity-theme-patch.git
+cd chuanban-antigravity-theme-patch
+node --test tests/*.test.mjs
+node scripts/install.mjs --help
+node scripts/install.mjs --preset high-contrast
+```
 
-## 使用方式
+需要Gemini 4默认1M时显式加 `--gemini-1m`；已有安装使用 `--upgrade`，先查看备份。要求macOS、Node.js >=22.5（建议24）、可用的本机CDP。安装器不自动下载字体或切换原生外观模式。Windows/Linux服务安装尚未实现。
 
-这个仓库的正文就是 [SKILL.md](SKILL.md)。两种用法：
+## 三种不同的数值
 
-1. **直接投喂**：把 SKILL.md 全文复制给你的执行端 Agent（Claude Code / Codex / Antigravity），说「按这个装」；
-2. **作为 Skill 安装**：把本仓库克隆（或下载 SKILL.md）到你的 skills 目录，触发词：安装/定制 Antigravity 主题、字体、配色、汉化补丁，或 Antigravity 设置按钮点不开。
+| 项目 | 含义 |
+| --- | --- |
+| 模型窗口 | 模型服务提供的能力上限 |
+| 最近调用预算 | 客户端为那一次调用记录的预算，指标分母来自这里 |
+| 压缩阈值 | 另一项配置，不能仅从窗口或百分比推断 |
 
-Agent 会先确认环境（macOS / Windows、Node.js 18+、Antigravity 已安装），询问你的配色偏好（不指定则默认部署高对比版），然后完成安装、常驻配置与验收。
+在Antigravity 2.28.2的Gemini 4 Medium上验证过：默认预算256,000；请求1,048,576总窗口后，扣除65,536输出预留，实际预算为 **983,040**。普通聊天发送和重启后新会话均得到此值。这不是对所有版本、账号的承诺。
 
-## 字体资源
+## 文档
 
-Anthropic 官方字体族（`AnthropicSans` / `AnthropicSerif` / `AnthropicMono`）与更纱黑体超集（`Sarasa-SuperTTC.ttc`）打包在 Google Drive 公开共享库：
+- [上下文字段与1M参数](references/context-budget.md)
+- [验证流程和证据边界](references/verification.md)
+- [关闭、卸载与恢复](references/recovery.md)
+- [字体检查](references/fonts.md)
+- [来源与改动记录](references/provenance.md)
 
-<https://drive.google.com/drive/folders/1NX92SgVUqtSjWg6bt6sIJXy-cn7J_boC>
+1M增强依赖补丁服务，长会话可能增加延迟和额度消耗；不改变安全权限或账号配额。尚未做近百万tokens输入压力测试，客户端升级后应重新验证。
 
-更纱黑体也可以通过 `brew install --cask font-sarasa-gothic`（macOS）或 GitHub Release（Windows）安装。
-
-## 安全说明
-
-- 补丁通过 CDP 只连接 `127.0.0.1` 本地回环，不把调试端口暴露到外网；
-- 不修改 `/Applications/Antigravity.app` 原生二进制，不破坏系统签名与自动更新；
-- 卸载即净：停掉并删除 LaunchAgent → 结束守护进程 → 设置里切回 Default Light → 重启 Antigravity → 删除补丁目录，100% 回退出厂状态。
-
-## 适合谁
-
-- 用 Antigravity 干活、受够了冷灰工程界面的人；
-- 想要 Claude Desktop 那种暖纸阅读质感的人；
-- 喜欢 美观字体 的颜控。
-
----
-
-*Made by [船板](https://github.com/Anarcadia) · 原方案数值与选择器均经 macOS 实测 · Windows 与轻量路线只给原则，由执行 Agent 自行调研落地*
+字体、用户数据库、账号信息和本机验收截图不随仓库分发。本fork保留上游来源说明，不为上游内容或第三方字体另行授予许可。

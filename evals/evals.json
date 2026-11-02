@@ -1,0 +1,7 @@
+{
+  "skill_name": "chuanban-antigravity-theme-patch",
+  "evals": [
+    {"id": 1, "prompt": "macOS已安装Antigravity，有本机调试端口和Node24。请装推荐高对比主题及指标，没有要求调整模型预算。已有同名补丁目录。仅作安装方案演练，不操作真实系统。", "expected_output": "保护已有目录并备份升级；默认不启用Gemini 4 1M；字体另行核实；真实预算不猜256k；明确验证与恢复。", "files": []},
+    {"id": 2, "prompt": "明确启用Gemini 4默认1M；API测试会话预算983040，但普通界面还是256000。仅作方案演练，说明如何完成真实安装验收、处理缺失预算并单独恢复主题保留。", "expected_output": "检查普通界面gRPC-Web JSON等请求格式，验证实际元数据和重启后新会话；缺失预算不猜；配置gemini1m关闭后重启服务和客户端；不改变其他模型。", "files": []}
+  ]
+}
